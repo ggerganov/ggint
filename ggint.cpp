@@ -24,9 +24,8 @@ int main() {
 
     TNum num;
     ggint::zero(num);
-    for (auto & d : num) d = rand()%ggint::kDigitMax;
-    num[kDigits-1] = 0;
-    num[kDigits-2] = 0;
+    num[kDigits/2] = 64;
+    ggint::rand(num, num);
 
     printf("Digit max = %d\n", ggint::kDigitMax);
     print("a", num);
@@ -43,6 +42,8 @@ int main() {
     print("a", num);
     ggint::div(num0, num, q, r);
     print("a/b", q);
+    print("a%b", r);
+    ggint::mod(num0, num, r);
     print("a%b", r);
 
     ggint::mul(128, num);

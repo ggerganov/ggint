@@ -5,6 +5,7 @@
 
 #include <array>
 #include <limits>
+#include <random>
 
 namespace ggint {
 
@@ -191,4 +192,47 @@ namespace ggint {
             }
         }
 
+    // b % a = r
+    template<std::size_t Size>
+        void mod(const TNumTmpl<Size> & a, const TNumTmpl<Size> & b, TNumTmpl<Size> & r) {
+            zero(r);
+            TNumTmpl<Size> t;
+
+            for (auto i = Size - 1; ; --i) {
+                shl(r);
+                add(b[i], r);
+                if (less_or_equal(a, r)) {
+                    t = a;
+                    TDigit k = 0;
+                    do {
+                        ++k;
+                        add(a, t);
+                    } while (less_or_equal(t, r));
+                    sub(a, t);
+                    sub(t, r);
+                }
+                if (i == 0) break;
+            }
+        }
+
+    // generate random number a
+    template<std::size_t Size>
+        void rand(TNumTmpl<Size> & a) {
+            for (auto & d : a) {
+                d = std::rand() & std::numeric_limits<TDigit>::max();
+                printf("%d, \n", d);
+            }
+        }
+
+    // generate random number a < b
+    template<std::size_t Size>
+        void rand(TNumTmpl<Size> & a, const TNumTmpl<Size> b) {
+            for (auto & d : a) {
+                d = std::rand() & std::numeric_limits<TDigit>::max();
+                printf("%d, \n", d);
+            }
+
+            auto t = a;
+            mod(b, t, a);
+        }
 }
