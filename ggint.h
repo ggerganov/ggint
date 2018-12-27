@@ -26,23 +26,23 @@ namespace ggint {
         }
 
     // a = 1
-	template<std::size_t Size>
-		void one(TNumTmpl<Size> & a) {
-			a.fill(0);
+    template<std::size_t Size>
+        void one(TNumTmpl<Size> & a) {
+            a.fill(0);
             a[0] = 1;
-		}
+        }
 
     // a = n
-	template<std::size_t Size>
-		void set(TNumTmpl<Size> & a, std::size_t n) {
-			a.fill(0);
+    template<std::size_t Size>
+        void set(TNumTmpl<Size> & a, std::size_t n) {
+            a.fill(0);
             std::size_t i = 0;
             while (n > 0 && i < Size) {
                 a[i] = n % kDigitMax;
                 n /= kDigitMax;
                 ++i;
             }
-		}
+        }
 
     // b = b + a
     template<std::size_t Size>
@@ -350,4 +350,37 @@ namespace ggint {
             }
         }
 
+    // print number: array of bytes and decimal representation
+    template<std::size_t Size>
+        void print(const char * pref, TNumTmpl<Size> x) {
+            int n = 0;
+            for (n = x.size() - 1; n >= 0; --n) {
+                if (x[n] != 0) break;
+            }
+
+            printf(" - %16s : ", pref);
+            for (int i = 0; i <= n; ++i) {
+                printf("%3d ", x[i]);
+            }
+            printf("\n");
+
+            {
+                TNumTmpl<Size> _10, q, r;
+                set(_10, 10);
+                std::array<char, 4096> str;
+                str.fill(0);
+
+                int n = 0;
+                printf("   %16s : ", "Decimal");
+                while (is_zero(x) == false) {
+                    div(_10, x, q, r);
+                    x = q;
+                    str[n++] = '0' + r[0];
+                }
+                for (int i = n - 1; i >= 0; --i) {
+                    printf("%c", str[i]);
+                }
+                printf("\n");
+            }
+        }
 }

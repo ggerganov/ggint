@@ -15,14 +15,6 @@ using TNum = ggint::TNumTmpl<kDigits>;
 
 std::vector<std::size_t> smallPrimes;
 
-void print(const char * pref, const TNum & x) {
-    printf(" - %10s : ", pref);
-    for (auto & d : x) {
-        printf("%3d ", d);
-    }
-    printf("\n");
-}
-
 bool is_prime(const TNum & n, std::size_t trials = 0) {
     if (ggint::is_even(n)) return false;
 
@@ -60,7 +52,6 @@ bool is_prime(const TNum & n, std::size_t trials = 0) {
 
             ggint::rand(a, _max);
             ggint::add(_2, a);
-
         }
 
         TNum x;
@@ -120,7 +111,7 @@ int main(int argc, char ** argv) {
 
     srand(time(0));
 
-    int nbits = 64;
+    int nbits = 92;
     if (argc > 1) {
         nbits = std::max(8, atoi(argv[1]));
         nbits = std::min(512, nbits);
@@ -202,7 +193,7 @@ int main(int argc, char ** argv) {
         }
 
         if (is_safe_prime) {
-            print("Found safe prime", n);
+            ggint::print("Found safe prime", n);
             break;
         }
 
