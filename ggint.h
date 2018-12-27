@@ -266,9 +266,10 @@ namespace ggint {
             zero(r);
             TNumTmpl<Size> t;
 
-            std::map<TDigit, TNumTmpl<Size>> cache;
+            static auto lastnum = a;
+            static std::map<TDigit, TNumTmpl<Size>> cache;
 
-            if (cache.empty()) {
+            if (cache.empty() || equal(a, lastnum) == false) {
                 zero(t);
                 for (int k = 0; k <= kDigitMax; ++k) {
                     cache[k] = t;

@@ -8,7 +8,7 @@
 
 #include "ggint.h"
 
-const std::size_t kDigits = 8;
+const std::size_t kDigits = 128; // max num : 2^(128*8) = 2^1024
 using TNum = ggint::TNumTmpl<kDigits>;
 
 int main() {
@@ -78,6 +78,14 @@ int main() {
         ggint::mul(a, a, p);
         ggint::print("a", a);
         ggint::print("p", p);
+    }
+
+    {
+        TNum a; ggint::zero(a); a[0] = 173;
+        std::size_t r;
+        ggint::mod(2, a, r);
+        ggint::print("a", a);
+        printf("r = %lu\n", r);
     }
 
     return 0;

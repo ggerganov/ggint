@@ -10,7 +10,7 @@
 
 #include "ggint.h"
 
-const std::size_t kDigits = 128;
+const std::size_t kDigits = 128; // max num : 2^(128*8) = 2^1024
 using TNum = ggint::TNumTmpl<kDigits>;
 
 std::vector<std::size_t> smallPrimes;
@@ -95,7 +95,6 @@ void add_prime(std::size_t n) {
         if (p*p > n) break;
         if (n%p == 0) return;
     }
-    printf("    - small prime : %lu\n", n);
     smallPrimes.push_back(n);
 }
 
@@ -119,7 +118,8 @@ int main(int argc, char ** argv) {
     }
 
     printf("Generating small primes for fast sieve check\n");
-    calc_small_primes(std::min(256, 1 << (std::min(nbits, 16) - 4)));
+    calc_small_primes(std::min(1 << 12, 1 << (std::min(nbits, 24) - 4)));
+    printf("Max prime in sieve = %lu\n", smallPrimes.back());
 
     TNum n_lo, n_hi, _1;
     ggint::one(n_lo);
@@ -142,41 +142,39 @@ int main(int argc, char ** argv) {
         if (ggint::is_zero(n)) {
             ggint::rand(n, n_hi);
             ggint::add(n_lo, n);
-        }
-
-        if (ggint::is_even(n)) {
-            ggint::add(1, n);
+            if (ggint::is_even(n)) {
+                ggint::add(1, n);
+            }
         }
 
         bool do_fast = true;
         while (true) {
-            std::fill(to_add.begin(), to_add.end(), false);
             for (auto p : smallPrimes) {
                 std::size_t r;
                 ggint::mod(p, n, r);
-                do {
-                    to_add[r] = true;
-                    r += p;
-                } while (r < to_add.size());
-            }
-
-            for (std::size_t i = 0; i < to_add.size(); ++i) {
-                if (to_add[i] == false) {
-                    if (i == 0) {
-                        do_fast = false;
-                    } else {
-                        ggint::add(i, n);
-                    }
+                if (r == 0) {
+                    do_fast = false;
                     break;
                 }
+            }
+            if (do_fast == false) {
+                ggint::add(2, n);
+                do_fast = true;
+                continue;
+            } else {
+                break;
             }
 
             if (do_fast == false) break;
         }
 
         if (is_prime(n, std::max(10, nbits/4))) {
+            printf("\n");
             ggint::print("Found prime", n);
             break;
+        } else {
+            printf(".");
+            fflush(stdout);
         }
 
         ggint::add(2, n);

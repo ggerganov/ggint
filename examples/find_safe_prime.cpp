@@ -10,7 +10,7 @@
 
 #include "ggint.h"
 
-const std::size_t kDigits = 128;
+const std::size_t kDigits = 128; // max num : 2^(128*8) = 2^1024
 using TNum = ggint::TNumTmpl<kDigits>;
 
 std::vector<std::size_t> smallPrimes;
@@ -94,7 +94,6 @@ void add_prime(std::size_t n) {
         if (p*p > n) break;
         if (n%p == 0) return;
     }
-    printf("    - small prime : %lu\n", n);
     smallPrimes.push_back(n);
 }
 
@@ -111,14 +110,15 @@ int main(int argc, char ** argv) {
 
     srand(time(0));
 
-    int nbits = 92;
+    int nbits = 192;
     if (argc > 1) {
         nbits = std::max(8, atoi(argv[1]));
         nbits = std::min(512, nbits);
     }
 
     printf("Generating small primes for fast sieve check\n");
-    calc_small_primes(std::min(256, 1 << (std::min(nbits, 16) - 4)));
+    calc_small_primes(std::min(1 << 12, 1 << (std::min(nbits, 24) - 4)));
+    printf("Max prime in sieve = %lu\n", smallPrimes.back());
 
     TNum n_lo, n_hi, _1;
     ggint::one(n_lo);
@@ -129,6 +129,7 @@ int main(int argc, char ** argv) {
     ggint::sub(n_lo, n_hi);
 
     TNum n;
+    TNum n2;
     ggint::zero(n);
     std::vector<bool> to_add(smallPrimes.back());
 
@@ -141,37 +142,38 @@ int main(int argc, char ** argv) {
         if (ggint::is_zero(n)) {
             ggint::rand(n, n_hi);
             ggint::add(n_lo, n);
-        }
+            if (ggint::is_even(n)) {
+                ggint::add(1, n);
+            }
 
-        if (ggint::is_even(n)) {
-            ggint::add(1, n);
+            n2 = n;
+            ggint::sub(_1, n2);
+            ggint::shbr(n2, 1);
         }
 
         bool do_fast = true;
         while (true) {
-            std::fill(to_add.begin(), to_add.end(), false);
             for (auto p : smallPrimes) {
                 std::size_t r;
                 ggint::mod(p, n, r);
-                do {
-                    to_add[r] = true;
-                    r += p;
-                } while (r < to_add.size());
-            }
-
-            for (std::size_t i = 0; i < to_add.size(); ++i) {
-                if (to_add[i] == false) {
-                    if (i == 0) {
-                        do_fast = false;
-                    } else {
-                        //printf("add %lu\n", i);
-                        ggint::add(i, n);
-                    }
+                if (r == 0) {
+                    do_fast = false;
+                    break;
+                }
+                ggint::mod(p, n2, r);
+                if (r == 0) {
+                    do_fast = false;
                     break;
                 }
             }
-
-            if (do_fast == false) break;
+            if (do_fast == false) {
+                ggint::add(2, n);
+                ggint::add(1, n2);
+                do_fast = true;
+                continue;
+            } else {
+                break;
+            }
         }
 
         {
@@ -179,25 +181,22 @@ int main(int argc, char ** argv) {
             //printf("Fast check: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
         }
 
-        TNum n2 = n;
-        ggint::sub(_1, n2);
-        ggint::shbr(n2, 1);
-
         bool is_safe_prime = true;
-        for (int t = 1; is_safe_prime && t < nbits/4; ++t) {
-            if (is_prime(n, t) && is_prime(n2, t)) {
-            } else {
-                is_safe_prime = false;
-                break;
-            }
+        if (is_prime(n, 3) && is_prime(n2, 3) && is_prime(n, nbits/4) && is_prime(n2, nbits/4)) {
+        } else {
+            is_safe_prime = false;
+            printf(".");
+            fflush(stdout);
         }
 
         if (is_safe_prime) {
+            printf("\n");
             ggint::print("Found safe prime", n);
             break;
         }
 
         ggint::add(2, n);
+        ggint::add(1, n2);
 
         {
             tEnd = std::chrono::high_resolution_clock::now();
