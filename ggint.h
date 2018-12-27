@@ -1,5 +1,5 @@
 /*! \file ggint.h
- *  \brief Enter description here.
+ *  \brief Poor man's long integer arithmetic operations
  *  \author Georgi Gerganov
  */
 
@@ -37,9 +37,10 @@ namespace ggint {
 		void set(TNumTmpl<Size> & a, std::size_t n) {
 			a.fill(0);
             std::size_t i = 0;
-            while (n > 0) {
+            while (n > 0 && i < Size) {
                 a[i] = n % kDigitMax;
                 n /= kDigitMax;
+                ++i;
             }
 		}
 
@@ -67,6 +68,7 @@ namespace ggint {
                 b[i] = x % kDigitMax;
                 r = x / kDigitMax;
                 a = 0;
+                if (r == 0) break;
             }
         }
 
@@ -258,15 +260,6 @@ namespace ggint {
             }
         }
 
-    template<std::size_t Size>
-        void print(const char * pref, const TNumTmpl<Size> & x) {
-            printf(" - %10s : ", pref);
-            for (auto & d : x) {
-                printf("%3d ", d);
-            }
-            printf("\n");
-        }
-
     // b % a = r
     template<std::size_t Size>
         void mod(const TNumTmpl<Size> & a, const TNumTmpl<Size> & b, TNumTmpl<Size> & r) {
@@ -309,6 +302,16 @@ namespace ggint {
             }
         }
 
+    // b % a = r
+    template<std::size_t Size>
+        void mod(std::size_t a, const TNumTmpl<Size> & b, std::size_t & r) {
+            r = 0;
+            for (auto i = Size - 1; ; --i) {
+                r = (r*kDigitMax + b[i]) % a;
+                if (i == 0) break;
+            }
+        }
+
     // generate random number a
     template<std::size_t Size>
         void rand(TNumTmpl<Size> & a) {
@@ -343,10 +346,7 @@ namespace ggint {
                 }
                 shbr(x, 1);
                 mul(a, a, t);
-                auto tStart = std::chrono::high_resolution_clock::now();
                 mod(n, t, a);
-                auto tEnd = std::chrono::high_resolution_clock::now();
-                //printf("  a : %d us\n", (int)(std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count()));
             }
         }
 

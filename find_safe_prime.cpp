@@ -1,5 +1,5 @@
-/*! \file find_prime.cpp
- *  \brief Search for N-bit prime number using Miller-Rabin primality test
+/*! \file ggint.cpp
+ *  \brief Search for N-bit safe primes
  *  \author Georgi Gerganov
  */
 
@@ -141,7 +141,7 @@ int main(int argc, char ** argv) {
     ggint::zero(n);
     std::vector<bool> to_add(smallPrimes.back());
 
-    printf("Searching for %d-bit prime ...\n", nbits);
+    printf("Searching for %d-bit safe prime ...\n", nbits);
 
     while (true) {
         auto tStart = std::chrono::high_resolution_clock::now();
@@ -173,6 +173,7 @@ int main(int argc, char ** argv) {
                     if (i == 0) {
                         do_fast = false;
                     } else {
+                        //printf("add %lu\n", i);
                         ggint::add(i, n);
                     }
                     break;
@@ -182,8 +183,26 @@ int main(int argc, char ** argv) {
             if (do_fast == false) break;
         }
 
-        if (is_prime(n, std::max(10, nbits/4))) {
-            print("Found prime", n);
+        {
+            tEnd = std::chrono::high_resolution_clock::now();
+            //printf("Fast check: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
+        }
+
+        TNum n2 = n;
+        ggint::sub(_1, n2);
+        ggint::shbr(n2, 1);
+
+        bool is_safe_prime = true;
+        for (int t = 1; is_safe_prime && t < nbits/4; ++t) {
+            if (is_prime(n, t) && is_prime(n2, t)) {
+            } else {
+                is_safe_prime = false;
+                break;
+            }
+        }
+
+        if (is_safe_prime) {
+            print("Found safe prime", n);
             break;
         }
 
@@ -193,6 +212,7 @@ int main(int argc, char ** argv) {
             tEnd = std::chrono::high_resolution_clock::now();
             //printf("Time: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
         }
+
     }
 
     return 0;

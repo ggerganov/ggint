@@ -1,4 +1,13 @@
 #!/bin/bash
 
-#g++ -Wall -Wpedantic -std=c++11 -O3 ggint.cpp
-g++ -Wall -Wpedantic -std=c++11 -O3 find_prime.cpp
+cur="ggint"
+echo "Compiling ${cur} ... "
+g++ -std=c++11 -O3 ${cur}.cpp -o ${cur}
+
+cur="find_prime"
+echo "Compiling ${cur} ... "
+g++ -std=c++11 -O3 ${cur}.cpp -o ${cur}
+
+cur="find_safe_prime"
+echo "Compiling ${cur} ... "
+g++ -std=c++11 -O3 ${cur}.cpp -o ${cur}

@@ -1,5 +1,5 @@
 /*! \file ggint.cpp
- *  \brief Enter description here.
+ *  \brief Some tests of ggint
  *  \author Georgi Gerganov
  */
 
@@ -47,10 +47,15 @@ int main() {
         print("a+b", num);
         ggint::sub(num0, num);
         print("a", num);
+        print("b", num0);
         ggint::div(num0, num, q, r);
         print("a/b", q);
         print("a%b", r);
         ggint::mod(num0, num, r);
+        print("a%b", r);
+        std::size_t rr = 0;
+        ggint::mod(((std::size_t)(num0[1]))*256 + num0[0], num, rr);
+        ggint::set(r, rr);
         print("a%b", r);
 
         ggint::mul(128, num);
