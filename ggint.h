@@ -23,6 +23,13 @@ namespace ggint {
             a.fill(0);
         }
 
+    // a = 1
+	template<std::size_t Size>
+		void one(TNumTmpl<Size> & a) {
+			a.fill(0);
+            a[0] = 1;
+		}
+
     // b = b + a
     template<std::size_t Size>
         void add(const TNumTmpl<Size> & a, TNumTmpl<Size> & b) {
@@ -98,6 +105,23 @@ namespace ggint {
             }
         }
 
+    // shift bits right
+    template<std::size_t Size>
+        void shbr(TNumTmpl<Size> & a, std::size_t sh = 1) {
+            if (sh == 0) return;
+            if (sh > 7) return;
+
+            TOverflow mask = (1 << sh) - 1;
+            TDigit bits0 = 0, bits1 = 0;
+            for (auto i = Size - 1; ; --i) {
+                bits1 = a[i] & mask;
+                a[i] >>= sh;
+                a[i] |= bits0 << (8 - sh);
+                bits0 = bits1;
+                if (i == 0) break;
+            }
+        }
+
     // b = b * a
     template<std::size_t Size>
         void mul(TDigit a, TNumTmpl<Size> & b) {
@@ -165,6 +189,18 @@ namespace ggint {
             return true;
         }
 
+    // a & 1 == 0
+    template<std::size_t Size>
+        bool is_even(const TNumTmpl<Size> & a) {
+            return (a[0] & 1) == 0;
+        }
+
+    // a & 1 == 1
+    template<std::size_t Size>
+        bool is_odd(const TNumTmpl<Size> & a) {
+            return (a[0] & 1) == 1;
+        }
+
     // b / a = q, b % a = r
     template<std::size_t Size>
         void div(const TNumTmpl<Size> & a, const TNumTmpl<Size> & b, TNumTmpl<Size> & q, TNumTmpl<Size> & r) {
@@ -220,7 +256,6 @@ namespace ggint {
         void rand(TNumTmpl<Size> & a) {
             for (auto & d : a) {
                 d = std::rand() & std::numeric_limits<TDigit>::max();
-                printf("%d, \n", d);
             }
         }
 
@@ -229,10 +264,28 @@ namespace ggint {
         void rand(TNumTmpl<Size> & a, const TNumTmpl<Size> b) {
             for (auto & d : a) {
                 d = std::rand() & std::numeric_limits<TDigit>::max();
-                printf("%d, \n", d);
             }
 
             auto t = a;
             mod(b, t, a);
         }
+
+    // r = a^x mod n
+    template<std::size_t Size>
+        void pow_mod(TNumTmpl<Size> a, TNumTmpl<Size> x, const TNumTmpl<Size> & n, TNumTmpl<Size> & r) {
+            TNumTmpl<Size> t;
+            one(r);
+            zero(t);
+
+            while (is_zero(x) == false) {
+                if (is_odd(x)) {
+                    mul(a, r, t);
+                    mod(n, t, r);
+                }
+                shbr(x, 1);
+                mul(a, a, t);
+                mod(n, t, a);
+            }
+        }
+
 }

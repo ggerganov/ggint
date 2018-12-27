@@ -26,6 +26,7 @@ int main() {
     ggint::zero(num);
     num[kDigits/2] = 64;
     ggint::rand(num, num);
+    printf("is_even = %d\n", ggint::is_even(num));
 
     printf("Digit max = %d\n", ggint::kDigitMax);
     print("a", num);
@@ -34,6 +35,10 @@ int main() {
     ggint::zero(num0);
     num0[0] = 0;
     num0[1] = rand()%ggint::kDigitMax;
+    print("b", num0);
+    ggint::shbr(num0, 3);
+    print("b >> 3", num0);
+    ggint::mul(8, num0);
     print("b", num0);
 
     ggint::add(num0, num);
@@ -57,6 +62,15 @@ int main() {
     TNum num1;
     ggint::mul(num0, num, num1);
     print("a*b", num1);
+
+    {
+        TNum a; ggint::zero(a); a[0] = 134;
+        TNum x; ggint::zero(x); x[0] = 73;
+        TNum n; ggint::zero(n); n[0] = 83;
+        TNum r;
+        ggint::pow_mod(a, x, n, r);
+        print("a^x mod n", r);
+    }
 
     return 0;
 }
