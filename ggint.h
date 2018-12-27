@@ -10,7 +10,7 @@
 namespace ggint {
 
     using TDigit = uint8_t;
-    using TOverflow = int16_t;
+    using TOverflow = uint16_t;
 
     template <std::size_t Size>
         using TNumTmpl = std::array<TDigit, Size>;
@@ -29,6 +29,17 @@ namespace ggint {
 		void one(TNumTmpl<Size> & a) {
 			a.fill(0);
             a[0] = 1;
+		}
+
+    // a = n
+	template<std::size_t Size>
+		void set(TNumTmpl<Size> & a, std::size_t n) {
+			a.fill(0);
+            std::size_t i = 0;
+            while (n > 0) {
+                a[i] = n % kDigitMax;
+                n /= kDigitMax;
+            }
 		}
 
     // b = b + a
@@ -110,8 +121,8 @@ namespace ggint {
     template<std::size_t Size>
         void shbl(TNumTmpl<Size> & a, std::size_t sh = 1) {
             if (sh == 0) return;
-            shl(a, sh/kDigitBits);
-            sh = sh%kDigitBits;
+            shl(a, sh / kDigitBits);
+            sh = sh % kDigitBits;
 
             TOverflow mask = kDigitMax - (1 << (kDigitBits - sh));
             TDigit bits0 = 0, bits1 = 0;
@@ -127,8 +138,8 @@ namespace ggint {
     template<std::size_t Size>
         void shbr(TNumTmpl<Size> & a, std::size_t sh = 1) {
             if (sh == 0) return;
-            shr(a, sh/kDigitBits);
-            sh = sh%kDigitBits;
+            shr(a, sh / kDigitBits);
+            sh = sh % kDigitBits;
 
             TOverflow mask = (1 << sh) - 1;
             TDigit bits0 = 0, bits1 = 0;
@@ -158,7 +169,6 @@ namespace ggint {
     template<std::size_t Size>
         void mul(const TNumTmpl<Size> & a, const TNumTmpl<Size> & b, TNumTmpl<Size> & p) {
             TNumTmpl<Size> t;
-            zero(t);
             zero(p);
             for (auto i = 0; i < Size; ++i) {
                 t = b;
