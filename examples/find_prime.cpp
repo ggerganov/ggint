@@ -169,8 +169,8 @@ int main(int argc, char ** argv) {
         }
 
         if (is_prime(n, std::max(10, nbits/4))) {
-            printf("\n");
-            ggint::print("Found prime", n);
+            printf("\nFound prime p:\n");
+            ggint::print("p", n);
             break;
         } else {
             printf(".");

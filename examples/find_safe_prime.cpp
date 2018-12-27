@@ -190,8 +190,9 @@ int main(int argc, char ** argv) {
         }
 
         if (is_safe_prime) {
-            printf("\n");
-            ggint::print("Found safe prime", n);
+            printf("\nFound safe prime p:\n");
+            ggint::print("p", n);
+            ggint::print("(p-1)/2", n2);
             break;
         }
 
