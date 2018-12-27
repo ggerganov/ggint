@@ -15,6 +15,7 @@ namespace ggint {
     template <std::size_t Size>
         using TNumTmpl = std::array<TDigit, Size>;
 
+    constexpr std::size_t kDigitBits = 8*sizeof(TDigit);
     constexpr TOverflow kDigitMax = std::numeric_limits<TDigit>::max() + 1;
 
     // a = 0
@@ -105,18 +106,36 @@ namespace ggint {
             }
         }
 
+    // shift bits left
+    template<std::size_t Size>
+        void shbl(TNumTmpl<Size> & a, std::size_t sh = 1) {
+            if (sh == 0) return;
+            shl(a, sh/kDigitBits);
+            sh = sh%kDigitBits;
+
+            TOverflow mask = kDigitMax - (1 << (kDigitBits - sh));
+            TDigit bits0 = 0, bits1 = 0;
+            for (auto i = 0; i < Size; ++i) {
+                bits1 = a[i] & mask;
+                a[i] <<= sh;
+                a[i] |= bits0 >> (kDigitBits - sh);
+                bits0 = bits1;
+            }
+        }
+
     // shift bits right
     template<std::size_t Size>
         void shbr(TNumTmpl<Size> & a, std::size_t sh = 1) {
             if (sh == 0) return;
-            if (sh > 7) return;
+            shr(a, sh/kDigitBits);
+            sh = sh%kDigitBits;
 
             TOverflow mask = (1 << sh) - 1;
             TDigit bits0 = 0, bits1 = 0;
             for (auto i = Size - 1; ; --i) {
                 bits1 = a[i] & mask;
                 a[i] >>= sh;
-                a[i] |= bits0 << (8 - sh);
+                a[i] |= bits0 << (kDigitBits - sh);
                 bits0 = bits1;
                 if (i == 0) break;
             }

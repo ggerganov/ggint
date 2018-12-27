@@ -38,7 +38,7 @@ int main() {
     print("b", num0);
     ggint::shbr(num0, 3);
     print("b >> 3", num0);
-    ggint::mul(8, num0);
+    ggint::shbl(num0, 3);
     print("b", num0);
 
     ggint::add(num0, num);
