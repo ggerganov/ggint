@@ -3,6 +3,7 @@
  *  \author Georgi Gerganov
  */
 
+#include <map>
 #include <array>
 #include <limits>
 #include <random>
@@ -16,7 +17,7 @@ namespace ggint {
         using TNumTmpl = std::array<TDigit, Size>;
 
     constexpr std::size_t kDigitBits = 8*sizeof(TDigit);
-    constexpr TOverflow kDigitMax = std::numeric_limits<TDigit>::max() + 1;
+    constexpr TOverflow kDigitMax = (TOverflow)(std::numeric_limits<TDigit>::max()) + 1;
 
     // a = 0
     template<std::size_t Size>
@@ -257,24 +258,52 @@ namespace ggint {
             }
         }
 
+    template<std::size_t Size>
+        void print(const char * pref, const TNumTmpl<Size> & x) {
+            printf(" - %10s : ", pref);
+            for (auto & d : x) {
+                printf("%3d ", d);
+            }
+            printf("\n");
+        }
+
     // b % a = r
     template<std::size_t Size>
         void mod(const TNumTmpl<Size> & a, const TNumTmpl<Size> & b, TNumTmpl<Size> & r) {
             zero(r);
             TNumTmpl<Size> t;
 
+            std::map<TDigit, TNumTmpl<Size>> cache;
+
+            if (cache.empty()) {
+                zero(t);
+                for (int k = 0; k <= kDigitMax; ++k) {
+                    cache[k] = t;
+                    add(a, t);
+                }
+            }
+
             for (auto i = Size - 1; ; --i) {
                 shl(r);
                 add(b[i], r);
+
                 if (less_or_equal(a, r)) {
-                    t = a;
-                    TDigit k = 0;
-                    do {
-                        ++k;
-                        add(a, t);
-                    } while (less_or_equal(t, r));
-                    sub(a, t);
-                    sub(t, r);
+                    if (less_or_equal(cache[kDigitMax - 1], r)) {
+                        sub(cache[kDigitMax - 1], r);
+                    } else {
+                        int k0 = 0;
+                        int k1 = kDigitMax;
+                        while (true) {
+                            int m = (k0 + k1)/2;
+                            if (less_or_equal(cache[m], r)) {
+                                k0 = m;
+                            } else {
+                                k1 = m;
+                            }
+                            if (k1 == k0 + 1) break;
+                        };
+                        sub(cache[k0], r);
+                    }
                 }
                 if (i == 0) break;
             }
@@ -284,7 +313,7 @@ namespace ggint {
     template<std::size_t Size>
         void rand(TNumTmpl<Size> & a) {
             for (auto & d : a) {
-                d = std::rand() & std::numeric_limits<TDigit>::max();
+                d = std::rand() % kDigitMax;
             }
         }
 
@@ -292,11 +321,12 @@ namespace ggint {
     template<std::size_t Size>
         void rand(TNumTmpl<Size> & a, const TNumTmpl<Size> b) {
             for (auto & d : a) {
-                d = std::rand() & std::numeric_limits<TDigit>::max();
+                d = std::rand() % kDigitMax;
             }
 
             auto t = a;
-            mod(b, t, a);
+            TNumTmpl<Size> q;
+            div(b, t, q, a);
         }
 
     // r = a^x mod n
@@ -313,7 +343,10 @@ namespace ggint {
                 }
                 shbr(x, 1);
                 mul(a, a, t);
+                auto tStart = std::chrono::high_resolution_clock::now();
                 mod(n, t, a);
+                auto tEnd = std::chrono::high_resolution_clock::now();
+                //printf("  a : %d us\n", (int)(std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count()));
             }
         }
 

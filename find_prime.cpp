@@ -5,10 +5,11 @@
 
 #include <array>
 #include <limits>
+#include <chrono>
 
 #include "ggint.h"
 
-const std::size_t kDigits = 8;
+const std::size_t kDigits = 64;
 using TNum = ggint::TNumTmpl<kDigits>;
 
 void print(const char * pref, const TNum & x) {
@@ -19,7 +20,7 @@ void print(const char * pref, const TNum & x) {
     printf("\n");
 }
 
-bool is_prime(const TNum & n) {
+bool is_prime(const TNum & n, std::size_t trials = 0) {
     if (ggint::is_even(n)) return false;
 
     TNum _1; ggint::one(_1);
@@ -41,8 +42,10 @@ bool is_prime(const TNum & n) {
         ggint::div(t, m, d, r);
     }
 
-    std::size_t trials = 10;
-    trials = std::max(trials, ((n.size()/2)*ggint::kDigitBits)/4);
+    if (trials == 0) {
+        trials = 10;
+        trials = std::max(trials, ((n.size()/2)*ggint::kDigitBits)/4);
+    }
 
     for (size_t i = 0; i < trials; ++i) {
         TNum a;
@@ -58,7 +61,10 @@ bool is_prime(const TNum & n) {
         }
 
         TNum x;
+        auto tStart = std::chrono::high_resolution_clock::now();
         ggint::pow_mod(a, d, n, x);
+        auto tEnd = std::chrono::high_resolution_clock::now();
+        printf("  pow_mod : %d us\n", (int)(std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count()));
 
         if (ggint::equal(x, _1) || ggint::equal(x, n_1)) {
             continue;
@@ -91,12 +97,44 @@ int main() {
     //srand(time(0));
     srand(1234);
 
-    TNum n; ggint::set(n, 197);
+    int nbits = 64;
+    TNum n_lo, n_hi, _1;
+    ggint::one(n_lo);
+    ggint::one(n_hi);
+    ggint::one(_1);
+    ggint::shbl(n_lo, nbits - 1);
+    ggint::shbl(n_hi, nbits);
+    ggint::sub(n_lo, n_hi);
+    while (true) {
+        auto tStart = std::chrono::high_resolution_clock::now();
+        auto tEnd = std::chrono::high_resolution_clock::now();
 
-    if (is_prime(n)) {
-        printf("Most likely prime\n");
-    } else {
-        printf("Definitely not prime\n");
+        TNum n;
+        ggint::rand(n, n_hi);
+        ggint::add(n_lo, n);
+        ggint::mul(12, n);
+        ggint::sub(_1, n);
+
+        TNum n2 = n;
+        ggint::sub(_1, n2);
+        ggint::shbr(n2, 1);
+
+        bool is_safe_prime = ggint::is_odd(n2);
+        for (int t = 1; is_safe_prime && t < 10; ++t) {
+            if (is_prime(n, t) && is_prime(n2, t)) {
+            } else {
+                is_safe_prime = false;
+                break;
+            }
+        }
+
+        if (is_safe_prime) {
+            print("safe prime", n);
+        }
+
+        tEnd = std::chrono::high_resolution_clock::now();
+        printf("Time: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
+
     }
 
     return 0;
