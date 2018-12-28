@@ -3,6 +3,8 @@
  *  \author Georgi Gerganov
  */
 
+#pragma once
+
 #include <map>
 #include <array>
 #include <limits>

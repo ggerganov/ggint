@@ -9,84 +9,13 @@
 #include <vector>
 
 #include "ggint.h"
+#include "common.h"
 
 const std::size_t kDigits = 128; // max num : 2^(128*8) = 2^1024
 using TNum = ggint::TNumTmpl<kDigits>;
 
+// sieve
 std::vector<std::size_t> smallPrimes;
-
-bool is_prime(const TNum & n, std::size_t trials = 0) {
-    if (ggint::is_even(n)) return false;
-
-    TNum _1; ggint::one(_1);
-    TNum n_1 = n; ggint::sub(_1, n_1);
-
-    std::size_t s = 0;
-    {
-        TNum m = n_1;
-        while (ggint::is_even(m)) {
-            ++s;
-            ggint::shbr(m, 1);
-        }
-    }
-
-    TNum d;
-    {
-        TNum m = n_1, t = _1, r;
-        ggint::shbl(t, s);
-        ggint::div(t, m, d, r);
-    }
-
-    if (trials == 0) {
-        trials = 3;
-    }
-
-    for (size_t i = 0; i < trials; ++i) {
-        TNum a;
-        {
-            TNum _max = n;
-            TNum _2; ggint::set(_2, 2);
-            TNum _4; ggint::set(_4, 4);
-            ggint::sub(_4, _max);
-
-            ggint::rand(a, _max);
-            ggint::add(_2, a);
-        }
-
-        TNum x;
-        {
-            auto tStart = std::chrono::high_resolution_clock::now();
-            ggint::pow_mod(a, d, n, x);
-            auto tEnd = std::chrono::high_resolution_clock::now();
-            //printf("  pow_mod : %d us\n", (int)(std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count()));
-        }
-
-        if (ggint::equal(x, _1) || ggint::equal(x, n_1)) {
-            continue;
-        }
-
-        for (std::size_t r = 0; r < s - 1; ++r) {
-            TNum x2, g;
-            ggint::mul(x, x, x2);
-            ggint::mod(n, x2, g);
-            x = g;
-
-            if (ggint::equal(x, _1)) {
-                return false;
-            }
-
-            if (ggint::equal(x, n_1)) {
-                break;
-            }
-        }
-
-        if (ggint::equal(x, n_1) == false) {
-            return false;
-        }
-    }
-
-    return true;
-}
 
 void add_prime(std::size_t n) {
     for (auto p : smallPrimes) {
