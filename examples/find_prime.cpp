@@ -46,13 +46,12 @@ bool is_prime(const TNum & n, std::size_t trials = 0) {
         TNum a;
         {
             TNum _max = n;
-            TNum _2; ggint::set(_2, 4);
+            TNum _2; ggint::set(_2, 2);
             TNum _4; ggint::set(_4, 4);
             ggint::sub(_4, _max);
 
             ggint::rand(a, _max);
             ggint::add(_2, a);
-
         }
 
         TNum x;
@@ -135,10 +134,11 @@ int main(int argc, char ** argv) {
 
     printf("Searching for %d-bit prime ...\n", nbits);
 
-    while (true) {
-        auto tStart = std::chrono::high_resolution_clock::now();
-        auto tEnd = std::chrono::high_resolution_clock::now();
+    auto tStart = std::chrono::high_resolution_clock::now();
+    auto tEnd = std::chrono::high_resolution_clock::now();
 
+    std::size_t ncheck = 0;
+    while (true) {
         if (ggint::is_zero(n)) {
             ggint::rand(n, n_hi);
             ggint::add(n_lo, n);
@@ -158,6 +158,7 @@ int main(int argc, char ** argv) {
                 }
             }
             if (do_fast == false) {
+                ++ncheck;
                 ggint::add(2, n);
                 do_fast = true;
                 continue;
@@ -168,7 +169,7 @@ int main(int argc, char ** argv) {
             if (do_fast == false) break;
         }
 
-        if (is_prime(n, std::max(10, nbits/4))) {
+        if (is_prime(n, std::max(10, nbits/16))) {
             printf("\nFound prime p:\n");
             ggint::print("p", n);
             break;
@@ -177,12 +178,18 @@ int main(int argc, char ** argv) {
             fflush(stdout);
         }
 
+        ++ncheck;
         ggint::add(2, n);
 
         {
             tEnd = std::chrono::high_resolution_clock::now();
             //printf("Time: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
         }
+    }
+
+    {
+        auto t = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
+        printf("Checked %d numbers in %d ms: %g num/sec\n", (int) ncheck, (int) t, 1000.0*((double)(ncheck))/t);
     }
 
     return 0;

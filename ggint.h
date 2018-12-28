@@ -263,6 +263,11 @@ namespace ggint {
     // b % a = r
     template<std::size_t Size>
         void mod(const TNumTmpl<Size> & a, const TNumTmpl<Size> & b, TNumTmpl<Size> & r) {
+            if (less(b, a)) {
+                r = b;
+                return;
+            }
+
             zero(r);
             TNumTmpl<Size> t;
 
@@ -338,7 +343,6 @@ namespace ggint {
         void pow_mod(TNumTmpl<Size> a, TNumTmpl<Size> x, const TNumTmpl<Size> & n, TNumTmpl<Size> & r) {
             TNumTmpl<Size> t;
             one(r);
-            zero(t);
 
             while (is_zero(x) == false) {
                 if (is_odd(x)) {
