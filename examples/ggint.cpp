@@ -64,9 +64,9 @@ int main() {
     }
 
     {
-        TNum a; ggint::zero(a); a[0] = 134;
-        TNum x; ggint::zero(x); x[0] = 73;
-        TNum n; ggint::zero(n); n[0] = 83;
+        TNum a; ggint::zero(a); a[0] = 105;
+        TNum x; ggint::zero(x); x[0] = 131;
+        TNum n; ggint::zero(n); n[1] = 1; n[0] = 7;
         TNum r;
         ggint::pow_mod(a, x, n, r);
         ggint::print("a^x mod n", r);

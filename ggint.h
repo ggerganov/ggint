@@ -280,6 +280,7 @@ namespace ggint {
                     cache[k] = t;
                     add(a, t);
                 }
+                lastnum = a;
             }
 
             for (auto i = Size - 1; ; --i) {
@@ -343,6 +344,7 @@ namespace ggint {
         void pow_mod(TNumTmpl<Size> a, TNumTmpl<Size> x, const TNumTmpl<Size> & n, TNumTmpl<Size> & r) {
             TNumTmpl<Size> t;
             one(r);
+            zero(t);
 
             while (is_zero(x) == false) {
                 if (is_odd(x)) {

@@ -38,8 +38,7 @@ bool is_prime(const TNum & n, std::size_t trials = 0) {
     }
 
     if (trials == 0) {
-        trials = 10;
-        trials = std::max(trials, ((n.size()/2)*ggint::kDigitBits)/4);
+        trials = 3;
     }
 
     for (size_t i = 0; i < trials; ++i) {
@@ -110,14 +109,14 @@ int main(int argc, char ** argv) {
 
     srand(time(0));
 
-    int nbits = 192;
+    int nbits = 256;
     if (argc > 1) {
         nbits = std::max(8, atoi(argv[1]));
         nbits = std::min(512, nbits);
     }
 
     printf("Generating small primes for fast sieve check\n");
-    calc_small_primes(std::min(1 << 12, 1 << (std::min(nbits, 24) - 4)));
+    calc_small_primes(std::min(1 << 24, 1 << (std::min(nbits, 24) - 4)));
     printf("Max prime in sieve = %lu\n", smallPrimes.back());
 
     TNum n_lo, n_hi, _1;
@@ -132,6 +131,8 @@ int main(int argc, char ** argv) {
     TNum n2;
     ggint::zero(n);
     std::vector<bool> to_add(smallPrimes.back());
+    std::vector<std::size_t> pmod(smallPrimes.back());
+    std::vector<std::size_t> pmod2(smallPrimes.back());
 
     printf("Searching for %d-bit safe prime ...\n", nbits);
 
@@ -150,27 +151,46 @@ int main(int argc, char ** argv) {
             n2 = n;
             ggint::sub(_1, n2);
             ggint::shbr(n2, 1);
+
+            if (ggint::is_even(n2)) {
+                ggint::add(2, n);
+                ggint::add(1, n2);
+            }
+
+            for (auto i = 0; i < smallPrimes.size(); ++i) {
+                auto p = smallPrimes[i];
+                std::size_t r;
+                ggint::mod(p, n, r);
+                pmod[i] = r;
+                ggint::mod(p, n2, r);
+                pmod2[i] = r;
+            }
         }
+
+        auto tCur = std::chrono::high_resolution_clock::now();
 
         bool do_fast = true;
         while (true) {
-            for (auto p : smallPrimes) {
-                std::size_t r;
-                ggint::mod(p, n, r);
-                if (r == 0) {
-                    do_fast = false;
-                    break;
-                }
-                ggint::mod(p, n2, r);
-                if (r == 0) {
+            for (auto i = 0; i < smallPrimes.size(); ++i) {
+                if (pmod[i] == 0 || pmod2[i] == 0) {
                     do_fast = false;
                     break;
                 }
             }
             if (do_fast == false) {
                 ++ncheck;
-                ggint::add(2, n);
-                ggint::add(1, n2);
+                ggint::add(4, n);
+                ggint::add(2, n2);
+
+                pmod[1] += 4; pmod[1] %= 3;
+                pmod2[1] += 2; pmod2[1] %= 3;
+                for (auto i = 2; i < smallPrimes.size(); ++i) {
+                    auto p = smallPrimes[i];
+                    pmod[i] += 4;
+                    if (pmod[i] >= p) pmod[i] -= p;
+                    pmod2[i] += 2;
+                    if (pmod2[i] >= p) pmod2[i] -= p;
+                }
                 do_fast = true;
                 continue;
             } else {
@@ -179,8 +199,9 @@ int main(int argc, char ** argv) {
         }
 
         {
+            //printf("ncheck = %d\n", (int) ncheck);
             tEnd = std::chrono::high_resolution_clock::now();
-            //printf("Fast check: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
+            //printf("Fast check: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tCur).count());
         }
 
         bool is_safe_prime = true;
@@ -199,8 +220,18 @@ int main(int argc, char ** argv) {
         }
 
         ++ncheck;
-        ggint::add(2, n);
-        ggint::add(1, n2);
+        ggint::add(4, n);
+        ggint::add(2, n2);
+
+        pmod[1] += 4; pmod[1] %= 3;
+        pmod2[1] += 2; pmod2[1] %= 3;
+        for (auto i = 2; i < smallPrimes.size(); ++i) {
+            auto p = smallPrimes[i];
+            pmod[i] += 4;
+            if (pmod[i] >= p) pmod[i] -= p;
+            pmod2[i] += 2;
+            if (pmod2[i] >= p) pmod2[i] -= p;
+        }
 
         {
             tEnd = std::chrono::high_resolution_clock::now();

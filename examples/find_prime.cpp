@@ -38,8 +38,7 @@ bool is_prime(const TNum & n, std::size_t trials = 0) {
     }
 
     if (trials == 0) {
-        trials = 10;
-        trials = std::max(trials, ((n.size()/2)*ggint::kDigitBits)/4);
+        trials = 3;
     }
 
     for (size_t i = 0; i < trials; ++i) {
@@ -117,7 +116,7 @@ int main(int argc, char ** argv) {
     }
 
     printf("Generating small primes for fast sieve check\n");
-    calc_small_primes(std::min(1 << 12, 1 << (std::min(nbits, 24) - 4)));
+    calc_small_primes(std::min(1 << 24, 1 << (std::min(nbits, 24) - 4)));
     printf("Max prime in sieve = %lu\n", smallPrimes.back());
 
     TNum n_lo, n_hi, _1;
@@ -130,7 +129,7 @@ int main(int argc, char ** argv) {
 
     TNum n;
     ggint::zero(n);
-    std::vector<bool> to_add(smallPrimes.back());
+    std::vector<std::size_t> pmod(smallPrimes.back());
 
     printf("Searching for %d-bit prime ...\n", nbits);
 
@@ -145,14 +144,20 @@ int main(int argc, char ** argv) {
             if (ggint::is_even(n)) {
                 ggint::add(1, n);
             }
+            for (auto i = 0; i < smallPrimes.size(); ++i) {
+                auto p = smallPrimes[i];
+                std::size_t r;
+                ggint::mod(p, n, r);
+                pmod[i] = r;
+            }
         }
+
+        auto tCur = std::chrono::high_resolution_clock::now();
 
         bool do_fast = true;
         while (true) {
-            for (auto p : smallPrimes) {
-                std::size_t r;
-                ggint::mod(p, n, r);
-                if (r == 0) {
+            for (auto i = 0; i < smallPrimes.size(); ++i) {
+                if (pmod[i] == 0) {
                     do_fast = false;
                     break;
                 }
@@ -160,6 +165,11 @@ int main(int argc, char ** argv) {
             if (do_fast == false) {
                 ++ncheck;
                 ggint::add(2, n);
+                for (auto i = 0; i < smallPrimes.size(); ++i) {
+                    auto p = smallPrimes[i];
+                    pmod[i] += 2;
+                    if (pmod[i] >= p) pmod[i] -= p;
+                }
                 do_fast = true;
                 continue;
             } else {
@@ -167,6 +177,12 @@ int main(int argc, char ** argv) {
             }
 
             if (do_fast == false) break;
+        }
+
+        {
+            //printf("ncheck = %d\n", (int) ncheck);
+            tEnd = std::chrono::high_resolution_clock::now();
+            //printf("Fast check: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tCur).count());
         }
 
         if (is_prime(n, std::max(10, nbits/16))) {
@@ -180,10 +196,10 @@ int main(int argc, char ** argv) {
 
         ++ncheck;
         ggint::add(2, n);
-
-        {
-            tEnd = std::chrono::high_resolution_clock::now();
-            //printf("Time: %d us\n", (int) std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart).count());
+        for (auto i = 0; i < smallPrimes.size(); ++i) {
+            auto p = smallPrimes[i];
+            pmod[i] += 2;
+            if (pmod[i] >= p) pmod[i] -= p;
         }
     }
 
