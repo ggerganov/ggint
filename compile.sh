@@ -11,3 +11,7 @@ g++ -std=c++11 -O3 -I. examples/${cur}.cpp -o ${cur}
 cur="find_safe_prime"
 echo "Compiling ${cur} ... "
 g++ -std=c++11 -O3 -I. examples/${cur}.cpp -o ${cur}
+
+cur="dlp"
+echo "Compiling ${cur} ... "
+g++ -std=c++11 -O3 -I. examples/${cur}.cpp -o ${cur}

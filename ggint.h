@@ -361,17 +361,19 @@ namespace ggint {
 
     // print number: array of bytes and decimal representation
     template<std::size_t Size>
-        void print(const char * pref, TNumTmpl<Size> x) {
+        void print(const char * pref, TNumTmpl<Size> x, bool printBytes = true) {
             int n = 0;
             for (n = x.size() - 1; n >= 0; --n) {
                 if (x[n] != 0) break;
             }
 
-            printf(" - %16s : ", pref);
-            for (int i = 0; i <= n; ++i) {
-                printf("%3d ", x[i]);
+            if (printBytes) {
+                printf(" - %16s : ", pref);
+                for (int i = 0; i <= n; ++i) {
+                    printf("%3d ", x[i]);
+                }
+                printf("\n");
             }
-            printf("\n");
 
             {
                 TNumTmpl<Size> _10, q, r;
@@ -380,7 +382,11 @@ namespace ggint {
                 str.fill(0);
 
                 int n = 0;
-                printf("   %16s : ", "Decimal");
+                if (printBytes) {
+                    printf("   %16s : ", "Decimal");
+                } else {
+                    printf(" - %16s : ", pref);
+                }
                 while (is_zero(x) == false) {
                     div(_10, x, q, r);
                     x = q;
